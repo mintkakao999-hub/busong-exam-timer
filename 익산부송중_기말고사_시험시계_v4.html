@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>시험 시계 · 익산부송중학교</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080b12; --bg2:#0f1524;
+  --panel:rgba(255,255,255,0.04); --panel-strong:rgba(255,255,255,0.075);
+  --line:rgba(255,255,255,0.09); --line-strong:rgba(255,255,255,0.16);
+  --ink:#f5f8fc; --muted:#98a4ba; --muted2:#5c6982;
+  --blue:#5aa9ff; --blue-soft:rgba(90,169,255,0.14);
+  --teal:#2dd4bf; --teal-soft:rgba(45,212,191,0.14);
+  --red:#ff6b6b; --red-soft:rgba(255,107,107,0.13);
+  --acc:#ffc24d; --acc2:#ff9d3c; --acc-soft:rgba(255,194,77,0.16); --glow:rgba(255,194,77,0.11);
+  /* 반경 스케일 */
+  --r-sm:12px; --r-md:16px; --r-lg:20px; --r-xl:26px;
+  /* 그림자 */
+  --shadow-card:0 18px 44px -18px rgba(0,0,0,0.55);
+}
+body.grade-1{ --acc:#ffc24d; --acc2:#ff9d3c; --acc-soft:rgba(255,194,77,0.16); --glow:rgba(255,194,77,0.11); }
+body.grade-2{ --acc:#5aa2ff; --acc2:#2f7ce0; --acc-soft:rgba(90,162,255,0.18); --glow:rgba(90,162,255,0.13); }
+body.grade-3{ --acc:#ff74b1; --acc2:#ff4f99; --acc-soft:rgba(255,116,177,0.18); --glow:rgba(255,116,177,0.13); }
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:'IBM Plex Sans KR',sans-serif;color:var(--ink);
+  background:
+    radial-gradient(1000px 620px at 15% -10%, var(--glow), transparent 58%),
+    radial-gradient(1000px 620px at 102% -4%, var(--glow), transparent 54%),
+    linear-gradient(158deg,var(--bg2) 0%, var(--bg) 62%);
+  transition:background .45s ease;position:relative;
+}
+
+/* ===== 고정 디자인 캔버스 (1600×900) → 화면에 맞게 자동 축소/확대 ===== */
+#stage{
+  position:absolute;top:0;left:0;
+  width:1600px;height:900px;
+  transform-origin:top left;          /* JS가 translate + scale 적용 */
+  display:flex;flex-direction:column;overflow:hidden;
+  padding:34px 44px 40px;             /* 캔버스 내부 여백으로 상하좌우 균형 */
+  gap:24px;
+}
+#stage::before{
+  content:"";position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(1250px 640px at 50% 14%, #000 26%, transparent 82%);pointer-events:none;
+}
+
+/* 상단 학년 색상 라인 */
+.grade-strip{
+  position:absolute;top:0;left:0;right:0;height:6px;
+  background:linear-gradient(90deg,var(--acc),var(--acc2));flex:none;z-index:5;
+  box-shadow:0 0 24px var(--glow);transition:background .45s;
+}
+
+/* ===== 헤더 ===== */
+.header{
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  flex:none;z-index:2;padding-bottom:2px;
+}
+.brand{display:flex;align-items:center;gap:18px;min-width:0;flex-wrap:wrap}
+.brand .mark{
+  width:16px;height:16px;border-radius:5px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  box-shadow:0 0 20px var(--acc);flex:none;transition:.45s;
+}
+.school{font-size:40px;font-weight:700;letter-spacing:-0.025em;line-height:1}
+.grade-badge{
+  font-size:26px;font-weight:800;line-height:1;padding:9px 20px;border-radius:var(--r-sm);
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0f17;
+  box-shadow:0 8px 22px -8px var(--acc);transition:.45s;
+}
+.exam-name{
+  font-size:19px;color:var(--muted);font-weight:500;white-space:nowrap;
+  padding-left:18px;margin-left:2px;border-left:1px solid var(--line-strong);
+}
+.grade-picker{display:flex;gap:6px;background:var(--panel);padding:6px;border-radius:var(--r-md);border:1px solid var(--line)}
+.grade-btn{
+  font-family:inherit;cursor:pointer;border:none;background:transparent;color:var(--muted);
+  font-size:18px;font-weight:700;padding:11px 22px;border-radius:11px;transition:.18s;
+}
+.grade-btn:hover{color:var(--ink);background:rgba(255,255,255,0.04)}
+.grade-btn.active{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0f17;box-shadow:0 6px 18px -6px var(--acc)}
+
+/* ===== 유의사항 ===== */
+.notice{
+  flex:none;padding:20px 30px;background:var(--red-soft);
+  border:1px solid rgba(255,107,107,0.34);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);z-index:2;
+  display:flex;align-items:center;gap:28px;
+}
+.notice .tag{
+  display:flex;align-items:center;gap:9px;font-weight:800;color:#ffbcbc;
+  font-size:22px;white-space:nowrap;flex:none;
+  padding-right:26px;border-right:1px solid rgba(255,107,107,0.3);align-self:stretch;
+}
+.notice .tag span{display:flex;align-items:center}
+.notice .items{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:11px 30px;
+  color:#ffdede;font-weight:600;font-size:20px;flex:1;
+}
+.notice .items span{display:flex;align-items:center;gap:9px;line-height:1.15}
+
+/* ===== 본문 ===== */
+.main{
+  display:grid;grid-template-columns:1.22fr 1fr;gap:34px;
+  z-index:1;align-items:stretch;flex:1;min-height:0;
+}
+
+/* 왼쪽: 날짜+시계+상태 */
+.clock-col{
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  justify-content:center;gap:26px;min-width:0;min-height:0;
+}
+.date-line{font-size:34px;color:#cfd8e8;font-weight:600;letter-spacing:0.005em}
+.clock{
+  font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;
+  font-weight:600;font-size:230px;line-height:0.82;letter-spacing:0.004em;
+  text-shadow:0 10px 46px rgba(0,0,0,0.5);
+}
+
+.status{
+  border:1px solid var(--line);background:var(--panel);border-radius:var(--r-xl);
+  padding:24px 30px;position:relative;overflow:hidden;transition:.3s;width:100%;text-align:left;
+  box-shadow:var(--shadow-card);backdrop-filter:blur(2px);
+}
+.status::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--muted2);transition:.3s}
+.status[data-phase="exam"]{background:var(--acc-soft);border-color:rgba(255,194,77,0.5)}
+.status[data-phase="exam"]::before{background:linear-gradient(var(--acc),var(--acc2));box-shadow:0 0 24px var(--acc)}
+.status[data-phase="prep"]{background:var(--blue-soft);border-color:rgba(90,169,255,0.4)}
+.status[data-phase="prep"]::before{background:var(--blue)}
+.status[data-phase="break"],.status[data-phase="homeroom"]{background:var(--teal-soft);border-color:rgba(45,212,191,0.4)}
+.status[data-phase="break"]::before,.status[data-phase="homeroom"]::before{background:var(--teal)}
+.status-top{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.dot{width:13px;height:13px;border-radius:50%;background:var(--muted)}
+.status[data-phase="exam"] .dot{background:var(--acc);animation:pulse 1.6s ease-in-out infinite}
+.status[data-phase="prep"] .dot{background:var(--blue);animation:pulse 1.6s ease-in-out infinite}
+.status[data-phase="break"] .dot,.status[data-phase="homeroom"] .dot{background:var(--teal)}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
+.status-kicker{font-size:22px;font-weight:700;color:#e6ecf6}
+.status-main{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.status-subject{font-size:50px;font-weight:800;line-height:1.04;letter-spacing:-0.015em}
+.countdown{text-align:right;flex:none}
+.countdown .label{font-size:16px;color:var(--muted);font-weight:500;margin-bottom:3px}
+.countdown .value{
+  font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;
+  font-size:56px;font-weight:600;line-height:1;
+}
+.progress{margin-top:16px;height:9px;border-radius:99px;background:rgba(255,255,255,0.09);overflow:hidden}
+.progress > i{display:block;height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .9s linear}
+
+/* 오른쪽: 일정 */
+.schedule{
+  border:1px solid var(--line);background:var(--panel);border-radius:var(--r-xl);
+  padding:24px 26px;display:flex;flex-direction:column;min-width:0;min-height:0;
+  box-shadow:var(--shadow-card);backdrop-filter:blur(2px);
+}
+.sched-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex:none}
+.sched-title{font-size:27px;font-weight:700}
+.sched-grade{
+  font-size:19px;color:var(--acc);font-weight:800;
+  padding:6px 14px;border-radius:99px;background:var(--acc-soft);border:1px solid rgba(255,194,77,0.3);
+}
+.day-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;flex:none}
+.day-tab{
+  font-family:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;
+  color:var(--muted);border-radius:var(--r-sm);padding:12px 4px;text-align:center;transition:.18s;
+}
+.day-tab:hover{color:var(--ink);border-color:var(--line-strong);background:rgba(255,255,255,0.03)}
+.day-tab.active{background:var(--panel-strong);border-color:var(--acc);color:var(--ink);box-shadow:0 6px 18px -10px var(--acc)}
+.day-tab .dt-date{font-size:20px;font-weight:700}
+.day-tab .dt-dow{font-size:13px;color:var(--muted);margin-top:2px}
+.day-tab.today{position:relative}
+.day-tab.today::after{
+  content:"오늘";position:absolute;top:-9px;right:6px;font-size:12px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0f17;font-weight:800;
+  padding:2px 9px;border-radius:99px;box-shadow:0 4px 10px -3px var(--acc);
+}
+
+/* 시간표 행: 세로 공간을 균등 분배해 상하 균형 맞춤 */
+.rows{display:flex;flex-direction:column;justify-content:space-between;gap:12px;flex:1;min-height:0}
+.row{
+  display:flex;align-items:center;gap:18px;padding:0 24px;flex:1;
+  border:1px solid var(--line);border-radius:var(--r-md);background:rgba(255,255,255,0.018);
+  transition:.25s;position:relative;
+}
+.row.self{opacity:0.5}
+.row.now{
+  background:var(--acc-soft);border:2px solid var(--acc);transform:scale(1.015);opacity:1;
+  animation:nowpulse 1.9s ease-in-out infinite;
+}
+@keyframes nowpulse{0%,100%{box-shadow:0 16px 40px rgba(0,0,0,.35),0 0 22px -8px var(--acc)}50%{box-shadow:0 16px 40px rgba(0,0,0,.35),0 0 48px 0px var(--acc)}}
+.now-badge{display:none}
+.row.now .now-badge{
+  display:inline-flex;align-items:center;gap:6px;position:absolute;top:-15px;left:20px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0f17;font-weight:800;font-size:17px;
+  padding:6px 18px;border-radius:99px;box-shadow:0 6px 16px rgba(0,0,0,.45);
+  animation:badgepulse 1.5s ease-in-out infinite;
+}
+@keyframes badgepulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.row .period{font-size:20px;font-weight:700;color:var(--muted);width:70px;flex:none}
+.row.now .period{color:var(--acc)}
+.row .subj{flex:1;font-size:40px;font-weight:800;letter-spacing:-0.015em;line-height:1}
+.row.now .subj{font-size:45px}
+.row.self .subj{font-weight:600;color:var(--muted)}
+.row .times{
+  display:flex;flex-direction:column;gap:5px;align-items:flex-end;
+  font-family:'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none;
+}
+.t-tag{font-family:'IBM Plex Sans KR',sans-serif;color:var(--muted2);font-weight:700;margin-right:8px;font-size:0.72em}
+.row .t-dist{font-size:21px;font-weight:600;color:var(--muted)}
+.row .t-exam{font-size:32px;font-weight:700;color:var(--ink)}
+.row.now .t-exam{color:var(--acc)}
+.row .t-self{font-size:30px;font-weight:700;color:var(--muted)}
+.row.now .t-self{color:var(--acc)}
+</style>
+</head>
+<body class="grade-1">
+
+<div id="stage">
+  <div class="grade-strip"></div>
+
+  <header class="header">
+    <div class="brand">
+      <span class="mark"></span>
+      <span class="school">익산부송중학교</span>
+      <span class="grade-badge" id="gradeBadge">1학년</span>
+      <span class="exam-name">2026학년도 1학기 기말시험</span>
+    </div>
+    <div class="grade-picker" id="gradePicker">
+      <button class="grade-btn" data-grade="1">1학년</button>
+      <button class="grade-btn" data-grade="2">2학년</button>
+      <button class="grade-btn" data-grade="3">3학년</button>
+    </div>
+  </header>
+
+  <section class="notice">
+    <div class="tag"><span>⚠️ 시험 중 유의사항</span></div>
+    <div class="items">
+      <span>📱 전자기기 미제출 시 부정행위</span>
+      <span>📝 서답형은 검정색 또는 파란색 볼펜으로 기입</span>
+      <span>🚫 서답형 수정테이프 사용 금지</span>
+      <span>✋ 시험 종료 후 자리에서 대기</span>
+      <span>❌ 부정행위 시 해당 과목 0점 처리</span>
+      <span>🖥️ 시험기간 중 학생의 전자칠판 임의 조작 금지</span>
+    </div>
+  </section>
+
+  <main class="main">
+    <section class="clock-col">
+      <div class="date-line" id="date">날짜 불러오는 중…</div>
+      <div class="clock" id="clock">00:00</div>
+      <div class="status" id="status" data-phase="idle" style="display:none">
+        <div class="status-top">
+          <span class="dot"></span>
+          <span class="status-kicker" id="statusKicker">—</span>
+        </div>
+        <div class="status-main">
+          <div class="status-subject" id="statusSubject">—</div>
+          <div class="countdown" id="countdownBox">
+            <div class="label" id="cdLabel">남은 시간</div>
+            <div class="value" id="cdValue">--:--</div>
+          </div>
+        </div>
+        <div class="progress" id="progressWrap" style="display:none"><i id="progressBar"></i></div>
+      </div>
+    </section>
+
+    <aside class="schedule">
+      <div class="sched-head">
+        <span class="sched-title">📅 오늘의 시험 일정</span>
+        <span class="sched-grade" id="schedGrade">1학년 일정</span>
+      </div>
+      <div class="day-tabs" id="dayTabs"></div>
+      <div class="rows" id="rows"></div>
+    </aside>
+  </main>
+</div>
+
+<script>
+/* ===== 화면 맞춤 + 가장자리 안전 여백 =====
+   전자칠판 테두리/오버스캔에 가려지지 않도록 화면 가장자리에 여백을 둠.
+   값을 키우면 여백이 커지고 내용이 작아집니다. (0.05 = 화면의 5%) */
+const BASE_W = 1600, BASE_H = 900;
+const SAFE_TOP    = 0.05;   // 위쪽 여백
+const SAFE_BOTTOM = 0.05;   // 아래쪽 여백
+const SAFE_X      = 0.015;  // 좌우 여백
+
+function viewport(){
+  /* 안드로이드 크롬은 window.innerWidth가 물리픽셀(3840)을 돌려주기도 해서,
+     실제 그려지는 CSS 화면 크기인 documentElement.clientWidth를 우선 사용 */
+  const de = document.documentElement;
+  let w = de.clientWidth || window.innerWidth;
+  let h = de.clientHeight || window.innerHeight;
+  if(window.visualViewport){           /* 핀치줌/주소창 보정 */
+    w = Math.min(w, Math.round(window.visualViewport.width));
+    h = Math.min(h, Math.round(window.visualViewport.height));
+  }
+  return {w, h};
+}
+function fitStage(){
+  const stage = document.getElementById('stage');
+  const {w, h} = viewport();
+  const availW = w * (1 - SAFE_X*2);
+  const availH = h * (1 - SAFE_TOP - SAFE_BOTTOM);
+  const s = Math.min(availW/BASE_W, availH/BASE_H);
+  const offX = w*SAFE_X      + (availW - BASE_W*s)/2;
+  const offY = h*SAFE_TOP    + (availH - BASE_H*s)/2;
+  stage.style.transform = `translate(${offX}px, ${offY}px) scale(${s})`;
+}
+window.addEventListener('resize', fitStage);
+window.addEventListener('orientationchange', ()=>setTimeout(fitStage,200));
+if(window.visualViewport){ window.visualViewport.addEventListener('resize', fitStage); }
+fitStage();
+setTimeout(fitStage, 300);   // 폰트 로딩/주소창 변화 후 재보정
+setTimeout(fitStage, 1000);
+
+/* ===== 시험 데이터 (이미지 기준) ===== */
+const YEAR = 2026;
+const EXAM_DAYS = [
+  { m:6, d:29, dow:"월", subjects:{
+      1:["자율학습","기·가","수학"], 2:["기·가","자율학습","수학"], 3:["기·가","수학","자율학습"] } },
+  { m:6, d:30, dow:"화", subjects:{
+      1:["자율학습","사회","한/일"], 2:["한/일","도덕","자율학습"], 3:["사회","자율학습","도덕"] } },
+  { m:7, d:1,  dow:"수", subjects:{
+      1:["국어","영어","자율학습"], 2:["국어","자율학습","영어"], 3:["자율학습","국어","영어"] } },
+  { m:7, d:2,  dow:"목", subjects:{
+      1:["자율학습","과학","자율학습"], 2:["역사","자율학습","과학"], 3:["역사","자율학습","과학"] } },
+];
+const PERIOD_TIME = {
+  1:{ dist:["08:55","09:00"], exam:["09:00","09:45"] },
+  2:{ dist:["09:55","10:00"], exam:["10:00","10:45"] },
+  3:{ dist:["10:55","11:00"], exam:["11:00","11:45"] },
+};
+const SEGMENTS = [
+  { s:"08:40", e:"08:50", kind:"homeroom", period:null },
+  { s:"08:55", e:"09:00", kind:"prep",     period:1 },
+  { s:"09:00", e:"09:45", kind:"exam",     period:1 },
+  { s:"09:55", e:"10:00", kind:"prep",     period:2 },
+  { s:"10:00", e:"10:45", kind:"exam",     period:2 },
+  { s:"10:55", e:"11:00", kind:"prep",     period:3 },
+  { s:"11:00", e:"11:45", kind:"exam",     period:3 },
+];
+
+let grade = 1;
+try { const g = localStorage.getItem('busong_grade'); if(g) grade = parseInt(g); } catch(e){}
+let selectedDay = pickInitialDay();
+let userPickedDay = false;   // 사용자가 직접 탭을 눌렀는지 (누른 뒤엔 자동전환 중단)
+let lastDayKey = '';         // 날짜(연-월-일) 변경 감지용
+
+/* 기기 시간대와 무관하게 항상 한국표준시(KST) 기준으로 동작 */
+function nowKST(){
+  try{
+    const s = new Date().toLocaleString('en-US', { timeZone:'Asia/Seoul' });
+    const d = new Date(s);
+    if(!isNaN(d)) return d;
+  }catch(e){}
+  return new Date();
+}
+
+function toSec(hm){ const [h,m]=hm.split(':').map(Number); return h*3600+m*60; }
+function pad(n){ return n.toString().padStart(2,'0'); }
+function fmtDur(sec){
+  if(sec<0) sec=0;
+  const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+  return h>0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+function pickInitialDay(){
+  const now=nowKST();
+  const idx=EXAM_DAYS.findIndex(x=>x.m===now.getMonth()+1 && x.d===now.getDate() && now.getFullYear()===YEAR);
+  if(idx>=0) return idx;
+  const future=EXAM_DAYS.findIndex(x=>new Date(YEAR,x.m-1,x.d) >= new Date(now.getFullYear(),now.getMonth(),now.getDate()));
+  return future>=0 ? future : EXAM_DAYS.length-1;
+}
+
+function applyGrade(){
+  document.body.className = 'grade-'+grade;
+  document.getElementById('gradeBadge').textContent = grade+'학년';
+  document.getElementById('schedGrade').textContent = grade+'학년 일정';
+  document.querySelectorAll('.grade-btn').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.grade)===grade));
+}
+function renderDayTabs(){
+  const now=nowKST();
+  const tabs=document.getElementById('dayTabs'); tabs.innerHTML='';
+  EXAM_DAYS.forEach((day,i)=>{
+    const isToday = day.m===now.getMonth()+1 && day.d===now.getDate() && now.getFullYear()===YEAR;
+    const btn=document.createElement('button');
+    btn.className='day-tab'+(i===selectedDay?' active':'')+(isToday?' today':'');
+    btn.innerHTML=`<div class="dt-date">${day.m}/${day.d}</div><div class="dt-dow">${day.dow}요일</div>`;
+    btn.onclick=()=>{ selectedDay=i; userPickedDay=true; renderDayTabs(); renderRows(); tick(); };
+    tabs.appendChild(btn);
+  });
+}
+function renderRows(){
+  const day=EXAM_DAYS[selectedDay];
+  const rows=document.getElementById('rows'); rows.innerHTML='';
+  for(let p=1;p<=3;p++){
+    const subj=day.subjects[grade][p-1];
+    const t=PERIOD_TIME[p];
+    const isSelf = subj==='자율학습';
+    const timesHTML = isSelf
+      ? `<span class="t-self">${t.dist[0]} ~ ${t.exam[1]}</span>`
+      : `<span class="t-dist"><span class="t-tag">배부</span>${t.dist[0]} ~ ${t.dist[1]}</span>
+         <span class="t-exam"><span class="t-tag">시험</span>${t.exam[0]} ~ ${t.exam[1]}</span>`;
+    const row=document.createElement('div');
+    row.className='row'+(isSelf?' self':'');
+    row.dataset.period=p;
+    row.innerHTML=`
+      <span class="now-badge"></span>
+      <span class="period">${p}교시</span>
+      <span class="subj">${subj}</span>
+      <span class="times">${timesHTML}</span>`;
+    rows.appendChild(row);
+  }
+}
+function isSelectedDayToday(){
+  const now=nowKST();
+  const day=EXAM_DAYS[selectedDay];
+  return day.m===now.getMonth()+1 && day.d===now.getDate() && now.getFullYear()===YEAR;
+}
+function computeState(nowSec){
+  const segs=SEGMENTS.map(x=>({...x, ss:toSec(x.s), ee:toSec(x.e)}));
+  const first=segs[0], last=segs[segs.length-1];
+  if(nowSec<first.ss) return {phase:"before", remain:first.ss-nowSec, focus:null};
+  if(nowSec>=last.ee) return {phase:"after", remain:0, focus:null};
+  for(let i=0;i<segs.length;i++){
+    const seg=segs[i];
+    if(nowSec>=seg.ss && nowSec<seg.ee)
+      return {phase:seg.kind, period:seg.period, focus:seg.period, remain:seg.ee-nowSec, total:seg.ee-seg.ss};
+    if(nowSec<seg.ss)
+      return {phase:"break", remain:seg.ss-nowSec, focus:seg.period};
+  }
+}
+
+function tick(){
+  const now=nowKST();
+
+  /* ===== 날짜 자동전환 =====
+     자정을 넘겨 다음 시험일이 되면, 사용자가 직접 탭을 누른 적이 없는 한
+     선택된 날짜를 오늘(또는 다음 시험일)로 자동 이동시킨다. */
+  const dayKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  if(dayKey !== lastDayKey){
+    lastDayKey = dayKey;
+    if(!userPickedDay){
+      const auto = pickInitialDay();
+      if(auto !== selectedDay){
+        selectedDay = auto;
+        renderDayTabs();
+        renderRows();
+      }
+    } else {
+      /* 자동전환은 멈췄더라도, '오늘' 배지 위치는 갱신 */
+      renderDayTabs();
+    }
+  }
+
+  document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const wd=['일','월','화','수','목','금','토'][now.getDay()];
+  document.getElementById('date').textContent =
+    `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${wd}요일`;
+
+  const statusEl=document.getElementById('status');
+  const day=EXAM_DAYS[selectedDay];
+  document.querySelectorAll('.row').forEach(r=>r.classList.remove('now'));
+
+  if(!isSelectedDayToday()){ statusEl.style.display='none'; return; }
+  statusEl.style.display='block';
+
+  const kicker=document.getElementById('statusKicker');
+  const subjectEl=document.getElementById('statusSubject');
+  const cdLabel=document.getElementById('cdLabel');
+  const cdValue=document.getElementById('cdValue');
+  const progWrap=document.getElementById('progressWrap');
+  const progBar=document.getElementById('progressBar');
+
+  const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+  const st=computeState(nowSec);
+
+  let badge='';
+  if(st.phase==='exam'){
+    const subj=day.subjects[grade][st.period-1];
+    badge = (subj==='자율학습') ? '● 진행 중' : '● 시험 중';
+  }else if(st.phase==='prep'){ badge='● 배부 중'; }
+  else if(st.phase==='break'){ badge='● 곧 시작'; }
+  if(st.focus){
+    const r=document.querySelector(`.row[data-period="${st.focus}"]`);
+    if(r){ r.classList.add('now'); const b=r.querySelector('.now-badge'); if(b) b.textContent=badge; }
+  }
+
+  if(st.phase==='before'){
+    statusEl.dataset.phase='idle';
+    kicker.textContent='시험 시작 전'; subjectEl.textContent='잠시 후 시작';
+    cdLabel.textContent='조회까지'; cdValue.textContent=fmtDur(st.remain); progWrap.style.display='none';
+  }
+  else if(st.phase==='after'){
+    statusEl.dataset.phase='idle';
+    kicker.textContent='오늘 시험 종료'; subjectEl.textContent='수고했습니다 👏';
+    cdLabel.textContent=''; cdValue.textContent=''; progWrap.style.display='none';
+  }
+  else if(st.phase==='homeroom'){
+    statusEl.dataset.phase='homeroom';
+    kicker.textContent='조회 · 사전교육'; subjectEl.textContent='시험 안내 중';
+    cdLabel.textContent='남은 시간'; cdValue.textContent=fmtDur(st.remain); progWrap.style.display='none';
+  }
+  else if(st.phase==='break'){
+    statusEl.dataset.phase='break';
+    kicker.textContent='쉬는 시간';
+    const nextSubj=day.subjects[grade][st.focus-1];
+    subjectEl.textContent=`다음 · ${st.focus}교시 ${nextSubj}`;
+    cdLabel.textContent='다음 교시까지'; cdValue.textContent=fmtDur(st.remain); progWrap.style.display='none';
+  }
+  else if(st.phase==='prep'){
+    statusEl.dataset.phase='prep';
+    kicker.textContent=`${st.period}교시 · 시험지 배부 중`;
+    subjectEl.textContent=day.subjects[grade][st.period-1];
+    cdLabel.textContent='시작까지'; cdValue.textContent=fmtDur(st.remain); progWrap.style.display='none';
+  }
+  else if(st.phase==='exam'){
+    const subj=day.subjects[grade][st.period-1];
+    const isSelf=subj==='자율학습';
+    statusEl.dataset.phase = isSelf ? 'break' : 'exam';
+    kicker.textContent = isSelf ? `${st.period}교시 · 자율학습` : `${st.period}교시 평가 진행 중`;
+    subjectEl.textContent = subj;
+    cdLabel.textContent='남은 시간'; cdValue.textContent=fmtDur(st.remain);
+    progWrap.style.display='block';
+    progBar.style.width = (100*(st.total-st.remain)/st.total).toFixed(1)+'%';
+  }
+}
+
+document.getElementById('gradePicker').addEventListener('click', e=>{
+  const b=e.target.closest('.grade-btn'); if(!b) return;
+  grade=parseInt(b.dataset.grade);
+  try{ localStorage.setItem('busong_grade', grade);}catch(err){}
+  applyGrade(); renderRows(); tick();
+});
+
+applyGrade();
+renderDayTabs();
+renderRows();
+tick();
+setInterval(tick, 1000);
+/* 웹폰트가 늦게 로드돼도 비율 재보정 */
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitStage); }
+</script>
+</body>
+</html>
