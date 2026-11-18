@@ -240,7 +240,7 @@ body{
       <span class="mark"></span>
       <span class="school">익산부송중학교</span>
       <span class="grade-badge" id="gradeBadge">3학년</span>
-      <span class="exam-name">2026학년도 2학기 2차 시험 (기말)</span>
+      <span class="exam-name">2026학년도 2학기 기말시험</span>
     </div>
     <div class="grade-picker" id="gradePicker">
       <button class="grade-btn" data-grade="2">2학년</button>
@@ -601,7 +601,7 @@ function tick(){
       subjectEl.textContent=`${nx.grade}학년 · ${nx.day.m}월 ${nx.day.d}일(${nx.day.dow})`;
       cdLabel.textContent='시험까지'; cdValue.textContent=`D-${dd}`;
     }else{
-      kicker.textContent='2학기 2차 시험 종료';
+      kicker.textContent='2학기 기말시험 종료';
       subjectEl.textContent='모두 수고했습니다 👏';
       cdLabel.textContent=''; cdValue.textContent='';
     }

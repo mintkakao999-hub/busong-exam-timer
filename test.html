@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<script>
+/* ===== [테스트 전용] 가짜 시계 ===== */
+(function(){
+  const p = new URLSearchParams(location.search);
+  const t = p.get('t');
+  const sp = parseFloat(p.get('speed') || '1') || 1;
+  if(!t) return;
+  const O = Date, realStart = O.now();
+  const fakeStart = O.parse(t.length === 16 ? t + ':00+09:00' : t + '+09:00');
+  if(isNaN(fakeStart)) return;
+  const fnow = () => fakeStart + (O.now() - realStart) * sp;
+  function D(...a){ return a.length ? new O(...a) : new O(fnow()); }
+  D.prototype = O.prototype; D.now = fnow; D.parse = O.parse; D.UTC = O.UTC;
+  window.Date = D;
+  window.__TEST__ = { t, speed: sp };
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>[테스트] 시험 시계 · 익산부송중학교</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080b12; --bg2:#0f1524;
+  --panel:rgba(255,255,255,0.04); --panel-strong:rgba(255,255,255,0.075);
+  --line:rgba(255,255,255,0.09); --line-strong:rgba(255,255,255,0.16);
+  --ink:#f5f8fc; --muted:#98a4ba; --muted2:#5c6982;
+  --blue:#5aa9ff; --blue-soft:rgba(90,169,255,0.14);
+  --teal:#2dd4bf; --teal-soft:rgba(45,212,191,0.14);
+  --red:#ff6b6b; --red-soft:rgba(255,107,107,0.13);
+  --acc:#ff74b1; --acc2:#ff4f99; --acc-soft:rgba(255,116,177,0.18); --acc-line:rgba(255,116,177,0.5); --glow:rgba(255,116,177,0.13);
+  --r-sm:12px; --r-md:16px; --r-lg:20px; --r-xl:26px;
+  --shadow-card:0 18px 44px -18px rgba(0,0,0,0.55);
+  /* 인터넷이 안 될 때도 비슷한 모양이 나오도록 로컬 대체 글꼴 지정 */
+  --font-sans:'IBM Plex Sans KR','Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  --font-mono:'IBM Plex Mono','Roboto Mono','Consolas','DejaVu Sans Mono','Droid Sans Mono',monospace;
+}
+body.grade-2{ --acc:#5aa2ff; --acc2:#2f7ce0; --acc-soft:rgba(90,162,255,0.18); --acc-line:rgba(90,162,255,0.5); --glow:rgba(90,162,255,0.13); }
+body.grade-3{ --acc:#ff74b1; --acc2:#ff4f99; --acc-soft:rgba(255,116,177,0.18); --acc-line:rgba(255,116,177,0.5); --glow:rgba(255,116,177,0.13); }
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:var(--font-sans);color:var(--ink);
+  background:
+    radial-gradient(1000px 620px at 15% -10%, var(--glow), transparent 58%),
+    radial-gradient(1000px 620px at 102% -4%, var(--glow), transparent 54%),
+    linear-gradient(158deg,var(--bg2) 0%, var(--bg) 62%);
+  background-color:var(--bg);
+  transition:background .45s ease;position:relative;
+}
+
+/* ===== 고정 디자인 캔버스 (1600×900) → 화면에 맞게 자동 축소/확대 ===== */
+#stage{
+  position:absolute;top:0;left:0;
+  width:1600px;height:900px;
+  transform-origin:top left;
+  display:flex;flex-direction:column;overflow:hidden;
+  padding:34px 44px 40px;
+  gap:22px;
+}
+#stage::before{
+  content:"";position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(1250px 640px at 50% 14%, #000 26%, transparent 82%);pointer-events:none;
+}
+
+.grade-strip{
+  position:absolute;top:0;left:0;right:0;height:6px;
+  background:linear-gradient(90deg,var(--acc),var(--acc2));flex:none;z-index:5;
+  box-shadow:0 0 24px var(--glow);transition:background .45s;
+}
+
+/* ===== 헤더 ===== */
+.header{
+  display:flex;align-items:center;justify-content:space-between;gap:24px;
+  flex:none;z-index:2;padding-bottom:2px;
+}
+.brand{display:flex;align-items:center;gap:18px;min-width:0;flex-wrap:wrap}
+.brand .mark{
+  width:16px;height:16px;border-radius:5px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  box-shadow:0 0 20px var(--acc);flex:none;transition:.45s;
+}
+.school{font-size:40px;font-weight:700;letter-spacing:-0.025em;line-height:1}
+.grade-badge{
+  font-size:26px;font-weight:800;line-height:1;padding:9px 20px;border-radius:var(--r-sm);
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0f17;
+  box-shadow:0 8px 22px -8px var(--acc);transition:.45s;
+}
+.exam-name{
+  font-size:19px;color:var(--muted);font-weight:500;white-space:nowrap;
+  padding-left:18px;margin-left:2px;border-left:1px solid var(--line-strong);
+}
+.grade-picker{display:flex;gap:6px;background:var(--panel);padding:6px;border-radius:var(--r-md);border:1px solid var(--line)}
+.grade-btn{
+  font-family:inherit;cursor:pointer;border:none;background:transparent;color:var(--muted);
+  font-size:18px;font-weight:700;padding:11px 22px;border-radius:11px;transition:.18s;
+}
+.grade-btn:hover{color:var(--ink);background:rgba(255,255,255,0.04)}
+.grade-btn.active{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0f17;box-shadow:0 6px 18px -6px var(--acc)}
+
+/* ===== 유의사항 ===== */
+.notice{
+  flex:none;padding:18px 30px;background:var(--red-soft);
+  border:1px solid rgba(255,107,107,0.34);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);z-index:2;
+  display:flex;align-items:center;gap:28px;
+}
+.notice .tag{
+  display:flex;align-items:center;gap:9px;font-weight:800;color:#ffbcbc;
+  font-size:22px;white-space:nowrap;flex:none;
+  padding-right:26px;border-right:1px solid rgba(255,107,107,0.3);align-self:stretch;
+}
+.notice .tag span{display:flex;align-items:center}
+.notice .items{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:10px 26px;
+  color:#ffdede;font-weight:600;font-size:20px;flex:1;
+}
+.notice .items span{display:flex;align-items:center;gap:9px;line-height:1.15;white-space:nowrap}
+.notice .items b{color:#fff;font-weight:800}
+
+/* ===== 본문 ===== */
+.main{
+  display:grid;grid-template-columns:1.22fr 1fr;gap:34px;
+  z-index:1;align-items:stretch;flex:1;min-height:0;
+}
+.clock-col{
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  justify-content:center;gap:24px;min-width:0;min-height:0;
+}
+.date-line{font-size:34px;color:#cfd8e8;font-weight:600;letter-spacing:0.005em}
+.clock{
+  font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+  font-weight:600;font-size:220px;line-height:0.82;letter-spacing:0.004em;
+  text-shadow:0 10px 46px rgba(0,0,0,0.5);white-space:nowrap;
+}
+
+.status{
+  border:1px solid var(--line);background:var(--panel);border-radius:var(--r-xl);
+  padding:22px 30px;position:relative;overflow:hidden;transition:.3s;width:100%;text-align:left;
+  box-shadow:var(--shadow-card);backdrop-filter:blur(2px);
+}
+.status::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--muted2);transition:.3s}
+.status[data-phase="exam"]{background:var(--acc-soft);border-color:var(--acc-line)}
+.status[data-phase="exam"]::before{background:linear-gradient(var(--acc),var(--acc2));box-shadow:0 0 24px var(--acc)}
+.status[data-phase="prep"]{background:var(--blue-soft);border-color:rgba(90,169,255,0.4)}
+.status[data-phase="prep"]::before{background:var(--blue)}
+.status[data-phase="break"],.status[data-phase="homeroom"]{background:var(--teal-soft);border-color:rgba(45,212,191,0.4)}
+.status[data-phase="break"]::before,.status[data-phase="homeroom"]::before{background:var(--teal)}
+.status-top{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.dot{width:13px;height:13px;border-radius:50%;background:var(--muted)}
+.status[data-phase="exam"] .dot{background:var(--acc);animation:pulse 1.6s ease-in-out infinite}
+.status[data-phase="prep"] .dot{background:var(--blue);animation:pulse 1.6s ease-in-out infinite}
+.status[data-phase="break"] .dot,.status[data-phase="homeroom"] .dot{background:var(--teal)}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:.5}}
+.status-kicker{font-size:22px;font-weight:700;color:#e6ecf6}
+.status-main{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.status-subject{font-size:48px;font-weight:800;line-height:1.04;letter-spacing:-0.015em}
+.countdown{text-align:right;flex:none}
+.countdown .label{font-size:16px;color:var(--muted);font-weight:500;margin-bottom:3px}
+.countdown .value{
+  font-family:var(--font-mono);font-variant-numeric:tabular-nums;
+  font-size:56px;font-weight:600;line-height:1;
+}
+.progress{margin-top:16px;height:9px;border-radius:99px;background:rgba(255,255,255,0.09);overflow:hidden}
+.progress > i{display:block;height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .9s linear}
+
+/* 오른쪽: 일정 */
+.schedule{
+  border:1px solid var(--line);background:var(--panel);border-radius:var(--r-xl);
+  padding:24px 26px;display:flex;flex-direction:column;min-width:0;min-height:0;
+  box-shadow:var(--shadow-card);backdrop-filter:blur(2px);
+}
+.sched-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex:none}
+.sched-title{font-size:27px;font-weight:700}
+.sched-grade{
+  font-size:19px;color:var(--acc);font-weight:800;
+  padding:6px 14px;border-radius:99px;background:var(--acc-soft);border:1px solid var(--acc-line);
+}
+.day-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;flex:none}
+.day-tab{
+  font-family:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;
+  color:var(--muted);border-radius:var(--r-sm);padding:12px 4px;text-align:center;transition:.18s;
+}
+.day-tab:hover{color:var(--ink);border-color:var(--line-strong);background:rgba(255,255,255,0.03)}
+.day-tab.active{background:var(--panel-strong);border-color:var(--acc);color:var(--ink);box-shadow:0 6px 18px -10px var(--acc)}
+.day-tab .dt-date{font-size:20px;font-weight:700}
+.day-tab .dt-dow{font-size:13px;color:var(--muted);margin-top:2px}
+.day-tab.today{position:relative}
+.day-tab.today::after{
+  content:"오늘";position:absolute;top:-9px;right:6px;font-size:12px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0f17;font-weight:800;
+  padding:2px 9px;border-radius:99px;box-shadow:0 4px 10px -3px var(--acc);
+}
+
+.rows{display:flex;flex-direction:column;justify-content:space-between;gap:12px;flex:1;min-height:0}
+.row{
+  display:flex;align-items:center;gap:18px;padding:0 24px;flex:1;
+  border:1px solid var(--line);border-radius:var(--r-md);background:rgba(255,255,255,0.018);
+  transition:.25s;position:relative;
+}
+.row.self{opacity:0.5}
+.row.now{
+  background:var(--acc-soft);border:2px solid var(--acc);transform:scale(1.015);opacity:1;
+  animation:nowpulse 1.9s ease-in-out infinite;
+}
+@keyframes nowpulse{0%,100%{box-shadow:0 16px 40px rgba(0,0,0,.35),0 0 22px -8px var(--acc)}50%{box-shadow:0 16px 40px rgba(0,0,0,.35),0 0 48px 0px var(--acc)}}
+.now-badge{display:none}
+.row.now .now-badge{
+  display:inline-flex;align-items:center;gap:6px;position:absolute;top:-15px;left:20px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#0b0f17;font-weight:800;font-size:17px;
+  padding:6px 18px;border-radius:99px;box-shadow:0 6px 16px rgba(0,0,0,.45);
+  animation:badgepulse 1.5s ease-in-out infinite;
+}
+@keyframes badgepulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.row .period{font-size:20px;font-weight:700;color:var(--muted);width:70px;flex:none}
+.row.now .period{color:var(--acc)}
+.row .subj{flex:1;font-size:40px;font-weight:800;letter-spacing:-0.015em;line-height:1}
+.row.now .subj{font-size:45px}
+.row.self .subj{font-weight:600;color:var(--muted)}
+.row .times{
+  display:flex;flex-direction:column;gap:5px;align-items:flex-end;
+  font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap;flex:none;
+}
+.t-tag{font-family:var(--font-sans);color:var(--muted2);font-weight:700;margin-right:8px;font-size:0.72em}
+.row .t-dist{font-size:21px;font-weight:600;color:var(--muted)}
+.row .t-exam{font-size:32px;font-weight:700;color:var(--ink)}
+.row.now .t-exam{color:var(--acc)}
+.row .t-self{font-size:30px;font-weight:700;color:var(--muted)}
+.row.now .t-self{color:var(--acc)}
+
+/* 시각 동기화 표시 (작게, 오른쪽 아래) */
+.sync{
+  position:absolute;right:44px;bottom:12px;font-size:13px;color:var(--muted2);
+  font-weight:500;z-index:3;letter-spacing:0.01em;
+}
+.sync.ok::before{content:"● ";color:var(--teal)}
+.sync.device::before{content:"● ";color:#e0a43c}
+</style>
+</head>
+<body class="grade-3">
+
+<div id="stage">
+  <div class="grade-strip"></div>
+
+  <header class="header">
+    <div class="brand">
+      <span class="mark"></span>
+      <span class="school">익산부송중학교</span>
+      <span class="grade-badge" id="gradeBadge">3학년</span>
+      <span class="exam-name">2026학년도 2학기 기말시험</span>
+    </div>
+    <div class="grade-picker" id="gradePicker">
+      <button class="grade-btn" data-grade="2">2학년</button>
+      <button class="grade-btn" data-grade="3">3학년</button>
+    </div>
+  </header>
+
+  <section class="notice">
+    <div class="tag"><span>⚠️ 시험 중 유의사항</span></div>
+    <div class="items">
+      <span>📱 전자기기 미제출 시 <b>부정행위</b></span>
+      <span>📝 서답형은 검정·파란 볼펜으로 기입</span>
+      <span>🚫 서답형 수정테이프 사용 금지</span>
+      <span>🪪 답안지 반·번호·이름 확인</span>
+      <span>✋ 질문은 손 들고 감독 선생님께</span>
+      <span>⏰ 종료 종이 울리면 즉시 필기 중단</span>
+      <span>🪑 시험 종료 후 자리에서 대기</span>
+      <span>❌ 부정행위 시 해당 과목 <b>0점</b></span>
+      <span>🖥️ 학생의 전자칠판 임의 조작 금지</span>
+    </div>
+  </section>
+
+  <main class="main">
+    <section class="clock-col">
+      <div class="date-line" id="date">날짜 불러오는 중…</div>
+      <div class="clock" id="clock">00:00</div>
+      <div class="status" id="status" data-phase="idle" style="display:none">
+        <div class="status-top">
+          <span class="dot"></span>
+          <span class="status-kicker" id="statusKicker">—</span>
+        </div>
+        <div class="status-main">
+          <div class="status-subject" id="statusSubject">—</div>
+          <div class="countdown" id="countdownBox">
+            <div class="label" id="cdLabel">남은 시간</div>
+            <div class="value" id="cdValue">--:--</div>
+          </div>
+        </div>
+        <div class="progress" id="progressWrap" style="display:none"><i id="progressBar"></i></div>
+      </div>
+    </section>
+
+    <aside class="schedule">
+      <div class="sched-head">
+        <span class="sched-title" id="schedTitle">📅 오늘의 시험 일정</span>
+        <span class="sched-grade" id="schedGrade">3학년 일정</span>
+      </div>
+      <div class="day-tabs" id="dayTabs"></div>
+      <div class="rows" id="rows"></div>
+    </aside>
+  </main>
+
+  <div class="sync" id="sync">시각 확인 중…</div>
+</div>
+
+<script>
+/* ===== 화면 맞춤 + 가장자리 안전 여백 =====
+   전자칠판 테두리/오버스캔에 가려지지 않도록 화면 가장자리에 여백을 둠.
+   값을 키우면 여백이 커지고 내용이 작아집니다. (0.05 = 화면의 5%) */
+const BASE_W = 1600, BASE_H = 900;
+const SAFE_TOP    = 0.05;
+const SAFE_BOTTOM = 0.05;
+const SAFE_X      = 0.015;
+
+function viewport(){
+  /* 안드로이드 크롬은 window.innerWidth가 물리픽셀(3840)을 돌려주기도 해서,
+     실제 그려지는 CSS 화면 크기인 documentElement.clientWidth를 우선 사용 */
+  const de = document.documentElement;
+  let w = de.clientWidth || window.innerWidth;
+  let h = de.clientHeight || window.innerHeight;
+  if(window.visualViewport){
+    w = Math.min(w, Math.round(window.visualViewport.width));
+    h = Math.min(h, Math.round(window.visualViewport.height));
+  }
+  return {w, h};
+}
+function fitStage(){
+  const stage = document.getElementById('stage');
+  const {w, h} = viewport();
+  const availW = w * (1 - SAFE_X*2);
+  const availH = h * (1 - SAFE_TOP - SAFE_BOTTOM);
+  const s = Math.min(availW/BASE_W, availH/BASE_H);
+  const offX = w*SAFE_X   + (availW - BASE_W*s)/2;
+  const offY = h*SAFE_TOP + (availH - BASE_H*s)/2;
+  stage.style.transform = `translate(${offX}px, ${offY}px) scale(${s})`;
+}
+window.addEventListener('resize', fitStage);
+window.addEventListener('orientationchange', ()=>setTimeout(fitStage,200));
+if(window.visualViewport){ window.visualViewport.addEventListener('resize', fitStage); }
+fitStage();
+setTimeout(fitStage, 300);
+setTimeout(fitStage, 1000);
+
+/* ===== 시험 데이터 (2026학년도 2학기 기말시험 일자별 시간표 기준) =====
+   - 학년마다 시험 날짜가 다름. 빈 칸은 '자율학습'.
+   - 다음 시험 때는 이 부분과 위 HTML의 시험명만 바꾸면 됩니다. */
+const YEAR = 2026;
+const GRADES = [2, 3];
+const EXAMS = {
+  3: [
+    { m:11, d:23, dow:"월", subjects:["자율학습","역사","자율학습"] },
+    { m:11, d:24, dow:"화", subjects:["영어","자율학습","과학"] },
+    { m:11, d:25, dow:"수", subjects:["국어","자율학습","사회"] },
+    { m:11, d:26, dow:"목", subjects:["수학","자율학습","기·가"] },
+  ],
+  2: [
+    { m:12, d:7,  dow:"월", subjects:["자율학습","역사","자율학습"] },
+    { m:12, d:8,  dow:"화", subjects:["영어","자율학습","과학"] },
+    { m:12, d:9,  dow:"수", subjects:["국어","자율학습","한/일"] },
+    { m:12, d:10, dow:"목", subjects:["수학","자율학습","기·가"] },
+  ],
+};
+const SELF = '자율학습';
+const PERIOD_TIME = {
+  1:{ dist:["08:55","09:00"], exam:["09:00","09:45"] },
+  2:{ dist:["09:55","10:00"], exam:["10:00","10:45"] },
+  3:{ dist:["10:55","11:00"], exam:["11:00","11:45"] },
+};
+const SEGMENTS = [
+  { s:"08:40", e:"08:50", kind:"homeroom", period:null },
+  { s:"08:55", e:"09:00", kind:"prep",     period:1 },
+  { s:"09:00", e:"09:45", kind:"exam",     period:1 },
+  { s:"09:55", e:"10:00", kind:"prep",     period:2 },
+  { s:"10:00", e:"10:45", kind:"exam",     period:2 },
+  { s:"10:55", e:"11:00", kind:"prep",     period:3 },
+  { s:"11:00", e:"11:45", kind:"exam",     period:3 },
+];
+
+/* ===== 시각: 표준시 동기화 + 한국표준시(KST) =====
+   전자칠판 시계가 틀려도 교실마다 같은 시각이 나오도록,
+   인터넷 시각과의 차이(offsetMs)를 구해 보정한다. 실패하면 기기 시계 사용. */
+let offsetMs = 0;
+let syncState = 'pending';
+
+function nowKST(){
+  const base = new Date(Date.now() + offsetMs);
+  try{
+    const d = new Date(base.toLocaleString('en-US', { timeZone:'Asia/Seoul' }));
+    if(!isNaN(d)) return d;
+  }catch(e){}
+  return base;
+}
+async function fetchWithTimeout(url, opts, ms){
+  const ctl = ('AbortController' in window) ? new AbortController() : null;
+  const timer = ctl ? setTimeout(()=>ctl.abort(), ms) : null;
+  try{ return await fetch(url, Object.assign({cache:'no-store'}, opts, ctl?{signal:ctl.signal}:{})); }
+  finally{ if(timer) clearTimeout(timer); }
+}
+const TIME_SOURCES = [
+  /* 웹서버에 올려 쓸 때: 같은 서버의 Date 헤더 (초 단위라 +500ms 보정) */
+  async ()=>{
+    if(!/^https?:$/.test(location.protocol)) throw 0;
+    const t0=Date.now();
+    const r=await fetchWithTimeout(location.href, {method:'HEAD'}, 5000);
+    const t1=Date.now();
+    const h=r.headers.get('Date'); if(!h) throw 0;
+    return { server:Date.parse(h)+500, t0, t1 };
+  },
+  /* 공개 시각 API 1: timeapi.io (UTC 기준) */
+  async ()=>{
+    const t0=Date.now();
+    const r=await fetchWithTimeout('https://timeapi.io/api/time/current/zone?timeZone=UTC', {}, 5000);
+    const j=await r.json();
+    const t1=Date.now();
+    return { server:Date.parse(String(j.dateTime).replace(/(\.\d{3})\d+/,'$1')+'Z'), t0, t1 };
+  },
+  /* 공개 시각 API 2: worldtimeapi.org (예비) */
+  async ()=>{
+    const t0=Date.now();
+    const r=await fetchWithTimeout('https://worldtimeapi.org/api/timezone/Asia/Seoul', {}, 5000);
+    const j=await r.json();
+    const t1=Date.now();
+    return { server:Date.parse(String(j.utc_datetime).replace(/(\.\d{3})\d+/,'$1')), t0, t1 };
+  },
+];
+async function syncTime(){
+  for(const src of TIME_SOURCES){
+    try{
+      const {server,t0,t1} = await src();
+      if(isNaN(server) || t1-t0 > 4000) continue;
+      offsetMs = server - (t0+t1)/2;
+      syncState = 'ok'; renderSync(); tick(); return;
+    }catch(e){}
+  }
+  if(syncState!=='ok'){ syncState='device'; renderSync(); }   /* 이전 동기화 값은 유지 */
+}
+function renderSync(){
+  const el=document.getElementById('sync');
+  el.className='sync '+(syncState==='ok'?'ok':syncState==='device'?'device':'');
+  if(syncState==='ok'){
+    const sec=Math.round(offsetMs/1000);
+    el.textContent = '표준시 동기화됨' + (Math.abs(sec)>=2 ? ` · 기기 시계 ${sec>0?sec+'초 느림':(-sec)+'초 빠름'}` : '');
+  }else if(syncState==='device'){
+    el.textContent='인터넷 시각 확인 실패 · 기기 시계 사용 중';
+  }else el.textContent='시각 확인 중…';
+}
+
+/* ===== 화면 꺼짐 방지 (Wake Lock) ===== */
+let wakeLock = null;
+async function keepAwake(){
+  try{
+    if('wakeLock' in navigator && !wakeLock && document.visibilityState==='visible'){
+      wakeLock = await navigator.wakeLock.request('screen');
+      wakeLock.addEventListener('release', ()=>{ wakeLock=null; });
+    }
+  }catch(e){}
+}
+document.addEventListener('visibilitychange', keepAwake);
+document.addEventListener('pointerdown', keepAwake);
+
+/* ===== 상태 ===== */
+let grade = 3;
+let selectedDay = 0;
+let userPicked = false;     // 사용자가 학년/날짜를 직접 골랐는지 (날짜가 바뀌면 자동으로 풀림)
+let lastDayKey = '';
+
+function toSec(hm){ const [h,m]=hm.split(':').map(Number); return h*3600+m*60; }
+function pad(n){ return n.toString().padStart(2,'0'); }
+function fmtDur(sec){
+  if(sec<0) sec=0;
+  const h=Math.floor(sec/3600), m=Math.floor((sec%3600)/60), s=sec%60;
+  return h>0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+function sameDay(day, now){ return now.getFullYear()===YEAR && day.m===now.getMonth()+1 && day.d===now.getDate(); }
+function dayDate(day){ return new Date(YEAR, day.m-1, day.d); }
+function today0(now){ return new Date(now.getFullYear(), now.getMonth(), now.getDate()); }
+
+/* 오늘 시험 보는 학년 → 없으면 가장 가까운 다음 시험 학년 → 모두 끝났으면 마지막 시험 학년 */
+function autoPick(){
+  const now=nowKST(), t=today0(now);
+  for(const g of GRADES){
+    const i=EXAMS[g].findIndex(x=>sameDay(x,now));
+    if(i>=0) return {grade:g, day:i};
+  }
+  let best=null;
+  for(const g of GRADES){
+    EXAMS[g].forEach((x,i)=>{ const dd=dayDate(x); if(dd>=t && (!best || dd<best.date)) best={grade:g, day:i, date:dd}; });
+  }
+  if(best) return {grade:best.grade, day:best.day};
+  let last=null;
+  for(const g of GRADES){
+    EXAMS[g].forEach((x,i)=>{ const dd=dayDate(x); if(!last || dd>last.date) last={grade:g, day:i, date:dd}; });
+  }
+  return {grade:last.grade, day:last.day};
+}
+/* 시험이 없는 날: 가장 가까운 다음 시험 (학년 무관) */
+function nextExam(){
+  const now=nowKST(), t=today0(now);
+  let best=null;
+  for(const g of GRADES){
+    EXAMS[g].forEach(x=>{ const dd=dayDate(x); if(dd>t && (!best || dd<best.date)) best={grade:g, day:x, date:dd}; });
+  }
+  return best;
+}
+function anyExamToday(){
+  const now=nowKST();
+  return GRADES.some(g=>EXAMS[g].some(x=>sameDay(x,now)));
+}
+
+function applyGrade(){
+  document.body.className = 'grade-'+grade;
+  document.getElementById('gradeBadge').textContent = grade+'학년';
+  document.getElementById('schedGrade').textContent = grade+'학년 일정';
+  document.querySelectorAll('.grade-btn').forEach(b=>b.classList.toggle('active', parseInt(b.dataset.grade,10)===grade));
+}
+function renderDayTabs(){
+  const now=nowKST();
+  const days=EXAMS[grade];
+  const tabs=document.getElementById('dayTabs'); tabs.innerHTML='';
+  tabs.style.gridTemplateColumns = `repeat(${days.length},1fr)`;
+  days.forEach((day,i)=>{
+    const btn=document.createElement('button');
+    btn.className='day-tab'+(i===selectedDay?' active':'')+(sameDay(day,now)?' today':'');
+    btn.innerHTML=`<div class="dt-date">${day.m}/${day.d}</div><div class="dt-dow">${day.dow}요일</div>`;
+    btn.onclick=()=>{ selectedDay=i; userPicked=true; renderAll(); };
+    tabs.appendChild(btn);
+  });
+  const sel=days[selectedDay];
+  document.getElementById('schedTitle').textContent =
+    sameDay(sel,now) ? '📅 오늘의 시험 일정' : `📅 ${sel.m}월 ${sel.d}일(${sel.dow}) 시험 일정`;
+}
+function renderRows(){
+  const day=EXAMS[grade][selectedDay];
+  const rows=document.getElementById('rows'); rows.innerHTML='';
+  for(let p=1;p<=3;p++){
+    const subj=day.subjects[p-1];
+    const t=PERIOD_TIME[p];
+    const isSelf = subj===SELF;
+    const timesHTML = isSelf
+      ? `<span class="t-self">${t.dist[0]} ~ ${t.exam[1]}</span>`
+      : `<span class="t-dist"><span class="t-tag">배부</span>${t.dist[0]} ~ ${t.dist[1]}</span>
+         <span class="t-exam"><span class="t-tag">시험</span>${t.exam[0]} ~ ${t.exam[1]}</span>`;
+    const row=document.createElement('div');
+    row.className='row'+(isSelf?' self':'');
+    row.dataset.period=p;
+    row.innerHTML=`
+      <span class="now-badge"></span>
+      <span class="period">${p}교시</span>
+      <span class="subj">${subj}</span>
+      <span class="times">${timesHTML}</span>`;
+    rows.appendChild(row);
+  }
+}
+function renderAll(){ applyGrade(); renderDayTabs(); renderRows(); tick(); }
+
+function computeState(nowSec){
+  const segs=SEGMENTS.map(x=>({...x, ss:toSec(x.s), ee:toSec(x.e)}));
+  const first=segs[0], last=segs[segs.length-1];
+  if(nowSec<first.ss) return {phase:"before", remain:first.ss-nowSec, focus:null};
+  if(nowSec>=last.ee) return {phase:"after", remain:0, focus:null};
+  for(let i=0;i<segs.length;i++){
+    const seg=segs[i];
+    if(nowSec>=seg.ss && nowSec<seg.ee)
+      return {phase:seg.kind, period:seg.period, focus:seg.period, remain:seg.ee-nowSec, total:seg.ee-seg.ss};
+    if(nowSec<seg.ss)
+      return {phase:"break", remain:seg.ss-nowSec, focus:seg.period, afterHomeroom:i>0 && segs[i-1].kind==='homeroom'};
+  }
+}
+
+function tick(){
+  const now=nowKST();
+
+  /* ===== 날짜 자동전환 =====
+     날짜가 바뀌면 직접 고른 학년/날짜 선택을 풀고, 오늘(또는 다음) 시험으로 자동 이동. */
+  const dayKey = `${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+  if(dayKey !== lastDayKey){
+    lastDayKey = dayKey;
+    userPicked = false;
+    const a = autoPick();
+    grade = a.grade; selectedDay = a.day;
+    applyGrade(); renderDayTabs(); renderRows();
+  }
+
+  document.getElementById('clock').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const wd=['일','월','화','수','목','금','토'][now.getDay()];
+  document.getElementById('date').textContent =
+    `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${wd}요일`;
+
+  const statusEl=document.getElementById('status');
+  const kicker=document.getElementById('statusKicker');
+  const subjectEl=document.getElementById('statusSubject');
+  const cdLabel=document.getElementById('cdLabel');
+  const cdValue=document.getElementById('cdValue');
+  const progWrap=document.getElementById('progressWrap');
+  const progBar=document.getElementById('progressBar');
+  const day=EXAMS[grade][selectedDay];
+  document.querySelectorAll('.row').forEach(r=>r.classList.remove('now'));
+
+  /* 선택한 날짜가 오늘이 아님 */
+  if(!sameDay(day, now)){
+    if(anyExamToday()){ statusEl.style.display='none'; return; }   /* 오늘 다른 학년 시험 중 → 숨김 */
+    statusEl.style.display='block';
+    statusEl.dataset.phase='idle'; progWrap.style.display='none';
+    const nx=nextExam();
+    if(nx){
+      const dd=Math.round((nx.date - today0(now))/86400000);
+      kicker.textContent='다음 시험';
+      subjectEl.textContent=`${nx.grade}학년 · ${nx.day.m}월 ${nx.day.d}일(${nx.day.dow})`;
+      cdLabel.textContent='시험까지'; cdValue.textContent=`D-${dd}`;
+    }else{
+      kicker.textContent='2학기 기말시험 종료';
+      subjectEl.textContent='모두 수고했습니다 👏';
+      cdLabel.textContent=''; cdValue.textContent='';
+    }
+    return;
+  }
+  statusEl.style.display='block';
+
+  const nowSec=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+  const st=computeState(nowSec);
+  const subjOf = p => day.subjects[p-1];
+  const selfOf = p => subjOf(p)===SELF;
+
+  let badge='';
+  if(st.phase==='exam')       badge = selfOf(st.period) ? '● 진행 중' : '● 시험 중';
+  else if(st.phase==='prep')  badge = selfOf(st.period) ? '● 곧 시작' : '● 배부 중';
+  else if(st.phase==='break') badge = '● 곧 시작';
+  if(st.focus){
+    const r=document.querySelector(`.row[data-period="${st.focus}"]`);
+    if(r){ r.classList.add('now'); const b=r.querySelector('.now-badge'); if(b) b.textContent=badge; }
+  }
+
+  progWrap.style.display='none';
+  if(st.phase==='before'){
+    statusEl.dataset.phase='idle';
+    kicker.textContent='시험 시작 전'; subjectEl.textContent='잠시 후 조회';
+    cdLabel.textContent='조회까지'; cdValue.textContent=fmtDur(st.remain);
+  }
+  else if(st.phase==='after'){
+    statusEl.dataset.phase='idle';
+    kicker.textContent='오늘 시험 종료'; subjectEl.textContent='수고했습니다 👏';
+    cdLabel.textContent=''; cdValue.textContent='';
+  }
+  else if(st.phase==='homeroom'){
+    statusEl.dataset.phase='homeroom';
+    kicker.textContent='조회 · 사전교육'; subjectEl.textContent='시험 안내 중';
+    cdLabel.textContent='남은 시간'; cdValue.textContent=fmtDur(st.remain);
+  }
+  else if(st.phase==='break'){
+    statusEl.dataset.phase='break';
+    kicker.textContent = st.afterHomeroom ? '시험 준비 시간' : '쉬는 시간';
+    subjectEl.textContent=`다음 · ${st.focus}교시 ${subjOf(st.focus)}`;
+    cdLabel.textContent='다음 교시까지'; cdValue.textContent=fmtDur(st.remain);
+  }
+  else if(st.phase==='prep'){
+    subjectEl.textContent=subjOf(st.period);
+    if(selfOf(st.period)){
+      statusEl.dataset.phase='break';
+      kicker.textContent=`${st.period}교시 · 자율학습 준비`;
+    }else{
+      statusEl.dataset.phase='prep';
+      kicker.textContent=`${st.period}교시 · 시험지·답안지 배부 중`;
+    }
+    cdLabel.textContent='시작까지'; cdValue.textContent=fmtDur(st.remain);
+  }
+  else if(st.phase==='exam'){
+    const isSelf=selfOf(st.period);
+    statusEl.dataset.phase = isSelf ? 'break' : 'exam';
+    kicker.textContent = isSelf ? `${st.period}교시 · 자율학습` : `${st.period}교시 평가 진행 중`;
+    subjectEl.textContent = subjOf(st.period);
+    cdLabel.textContent='남은 시간'; cdValue.textContent=fmtDur(st.remain);
+    progWrap.style.display='block';
+    progBar.style.width = (100*(st.total-st.remain)/st.total).toFixed(1)+'%';
+  }
+}
+
+document.getElementById('gradePicker').addEventListener('click', e=>{
+  const b=e.target.closest('.grade-btn'); if(!b) return;
+  const g=parseInt(b.dataset.grade,10);
+  if(!GRADES.includes(g)) return;
+  grade=g; userPicked=true;
+  /* 그 학년의 오늘 → 다음 시험일 → 마지막 날 */
+  const now=nowKST(), t=today0(now), days=EXAMS[grade];
+  let i=days.findIndex(x=>sameDay(x,now));
+  if(i<0) i=days.findIndex(x=>dayDate(x)>=t);
+  selectedDay = i>=0 ? i : days.length-1;
+  renderAll();
+});
+
+tick();                         /* 첫 tick에서 학년/날짜 자동 선택 + 화면 구성 */
+setInterval(tick, 1000);
+renderSync();
+if(window.__TEST__){ document.getElementById('sync').textContent='테스트 모드 · 동기화 꺼짐'; }
+else { syncTime(); setInterval(syncTime, 30*60*1000); }
+keepAwake();
+setInterval(keepAwake, 60*1000);
+if(document.fonts && document.fonts.ready){ document.fonts.ready.then(fitStage); }
+</script>
+
+<style>
+#testPanel{position:fixed;left:10px;bottom:10px;z-index:9999;font:13px/1.4 'Malgun Gothic',sans-serif;
+  background:rgba(20,24,34,.94);color:#e6ecf6;border:1px solid #ffb02e;border-radius:10px;padding:10px 12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.5);max-width:calc(100vw - 20px)}
+#testPanel b{color:#ffb02e}
+#testPanel select,#testPanel input,#testPanel button{font:inherit;margin:3px 2px;padding:3px 6px;border-radius:6px;
+  border:1px solid #556;background:#0f1524;color:#e6ecf6}
+#testPanel button{cursor:pointer;background:#ffb02e;color:#111;border:none;font-weight:700}
+#testPanel.min .body{display:none}
+#testPanel .row1{display:flex;gap:8px;align-items:center;justify-content:space-between}
+#testPanel #tpToggle{background:#334;color:#e6ecf6}
+</style>
+<div id="testPanel">
+  <div class="row1"><span><b>🧪 테스트 모드</b> <span id="tpNow"></span></span><button id="tpToggle">접기</button></div>
+  <div class="body">
+    <div>
+      <select id="tpPreset">
+        <option value="">— 상황 바로가기 —</option>
+        <optgroup label="3학년 11/23(월): 자율·역사·자율">
+          <option value="2026-11-23T08:30">08:30 시험 시작 전</option>
+          <option value="2026-11-23T08:45">08:45 조회·사전교육</option>
+          <option value="2026-11-23T08:52">08:52 시험 준비 시간</option>
+          <option value="2026-11-23T08:57">08:57 1교시 자율학습 준비</option>
+          <option value="2026-11-23T09:20">09:20 1교시 자율학습</option>
+          <option value="2026-11-23T09:50">09:50 쉬는 시간</option>
+          <option value="2026-11-23T09:57">09:57 2교시 역사 배부</option>
+          <option value="2026-11-23T10:30">10:30 2교시 역사 시험 중</option>
+          <option value="2026-11-23T11:50">11:50 오늘 시험 종료</option>
+        </optgroup>
+        <optgroup label="3학년 11/24(화): 영어·자율·과학">
+          <option value="2026-11-24T09:20">09:20 1교시 영어 시험 중</option>
+          <option value="2026-11-24T10:57">10:57 3교시 과학 배부</option>
+        </optgroup>
+        <optgroup label="날짜 넘어감·기간">
+          <option value="2026-11-22T23:59:50">11/22 23:59:50 → 자정 넘어 첫 시험일로 자동 전환</option>
+          <option value="2026-11-23T23:59:50">11/23 23:59:50 → 다음 시험일로 자동 전환</option>
+          <option value="2026-11-30T09:00">11/30 사이 기간 → 2학년 다음 시험 D-7</option>
+          <option value="2026-12-10T11:44:30">12/10 11:44:30 2학년 마지막 시험 끝나는 순간</option>
+          <option value="2026-12-11T09:00">12/11 → 전체 시험 종료</option>
+        </optgroup>
+      </select>
+    </div>
+    <div>
+      <input type="datetime-local" id="tpTime" step="1">
+      배속 <select id="tpSpeed">
+        <option value="1">1배</option><option value="10">10배</option>
+        <option value="60">60배</option><option value="300">300배</option>
+      </select>
+      <button id="tpGo">이 시각으로</button>
+      <button id="tpReal" style="background:#334;color:#e6ecf6">실제 시각</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  const T = window.__TEST__ || {};
+  const $ = id => document.getElementById(id);
+  if(T.t) $('tpTime').value = T.t.slice(0,19);
+  $('tpSpeed').value = String(T.speed || 1);
+  const go = t => { const q = new URLSearchParams({t, speed:$('tpSpeed').value}); location.search = q.toString(); };
+  $('tpPreset').onchange = e => { if(e.target.value) go(e.target.value); };
+  $('tpGo').onclick = () => { if($('tpTime').value) go($('tpTime').value); };
+  $('tpReal').onclick = () => { location.search = ''; };
+  $('tpToggle').onclick = () => { const p=$('testPanel'); p.classList.toggle('min'); $('tpToggle').textContent = p.classList.contains('min')?'펼치기':'접기'; };
+  setInterval(()=>{ const d=nowKST(); $('tpNow').textContent = T.t ? `· 가상 ${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())} (${T.speed}배)` : '· 실제 시각'; }, 250);
+})();
+</script>
+</body>
+</html>
