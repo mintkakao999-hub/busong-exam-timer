@@ -11,8 +11,9 @@
 from pathlib import Path
 
 HERE = Path(__file__).parent
-SRC = HERE / "익산부송중_2학기2차시험_시험시계_v5.html"
-OUT = HERE / "test.html"
+import sys
+SRC = HERE / (sys.argv[1] if len(sys.argv) > 1 else "익산부송중_2학기2차시험_시험시계_v5.html")
+OUT = HERE / (sys.argv[2] if len(sys.argv) > 2 else "test.html")
 
 SHIM = r"""
 <script>
