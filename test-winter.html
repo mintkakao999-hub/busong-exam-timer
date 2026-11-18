@@ -29,8 +29,9 @@
 :root{
   --bg:#071224; --bg2:#0f2648;
   --panel:rgba(214,232,255,0.075); --panel-strong:rgba(214,232,255,0.12);
+  --solid:rgba(12,26,50,0.94);
   --line:rgba(205,228,255,0.15); --line-strong:rgba(205,228,255,0.25);
-  --ink:#f6faff; --muted:#a9bdd8; --muted2:#6c84a6;
+  --ink:#f8fbff; --muted:#b8c9e0; --muted2:#7f96b6;
   --blue:#7ab8ff; --blue-soft:rgba(122,184,255,0.14);
   --teal:#7fd6e6; --teal-soft:rgba(127,214,230,0.13);
   --red:#ff7b84; --red-soft:rgba(255,123,132,0.10);
@@ -159,7 +160,7 @@ body::after{
 
 /* ===== 유의사항 ===== */
 .notice{
-  flex:none;padding:18px 30px;background:var(--red-soft);
+  flex:none;padding:18px 30px;background:linear-gradient(rgba(255,110,125,0.14),rgba(255,110,125,0.14)),rgba(16,22,42,0.94);
   border:1px solid rgba(255,140,150,0.30);border-radius:var(--r-lg);
   box-shadow:var(--frost-edge,0 0 #0000),var(--shadow-card);z-index:2;
   display:flex;align-items:center;gap:28px;
@@ -195,16 +196,16 @@ body::after{
 
 .status,.schedule,.notice{--frost-edge:inset 0 1px 0 var(--frost)}
 .status{
-  border:1px solid var(--line);background:linear-gradient(180deg,rgba(225,240,255,0.10),rgba(225,240,255,0) 45%),var(--panel);border-radius:var(--r-xl);
+  border:1px solid var(--line);background:linear-gradient(180deg,rgba(225,240,255,0.08),rgba(225,240,255,0) 45%),var(--solid);border-radius:var(--r-xl);
   padding:22px 30px;position:relative;overflow:hidden;transition:.3s;width:100%;text-align:left;
-  box-shadow:var(--frost-edge,0 0 #0000),var(--shadow-card);backdrop-filter:blur(2px);
+  box-shadow:var(--frost-edge,0 0 #0000),var(--shadow-card);
 }
 .status::before{content:"";position:absolute;left:0;top:0;bottom:0;width:6px;background:var(--muted2);transition:.3s}
-.status[data-phase="exam"]{background:var(--acc-soft);border-color:var(--acc-line)}
+.status[data-phase="exam"]{background:linear-gradient(var(--acc-soft),var(--acc-soft)),var(--solid);border-color:var(--acc-line)}
 .status[data-phase="exam"]::before{background:linear-gradient(var(--acc),var(--acc2));box-shadow:0 0 24px var(--acc)}
-.status[data-phase="prep"]{background:var(--blue-soft);border-color:rgba(122,184,255,0.38)}
+.status[data-phase="prep"]{background:linear-gradient(var(--blue-soft),var(--blue-soft)),var(--solid);border-color:rgba(122,184,255,0.38)}
 .status[data-phase="prep"]::before{background:var(--blue)}
-.status[data-phase="break"],.status[data-phase="homeroom"]{background:var(--teal-soft);border-color:rgba(127,214,230,0.38)}
+.status[data-phase="break"],.status[data-phase="homeroom"]{background:linear-gradient(var(--teal-soft),var(--teal-soft)),var(--solid);border-color:rgba(127,214,230,0.38)}
 .status[data-phase="break"]::before,.status[data-phase="homeroom"]::before{background:var(--teal)}
 .status-top{display:flex;align-items:center;gap:11px;margin-bottom:10px}
 .dot{width:13px;height:13px;border-radius:50%;background:var(--muted)}
@@ -226,9 +227,9 @@ body::after{
 
 /* 오른쪽: 일정 */
 .schedule{
-  border:1px solid var(--line);background:linear-gradient(180deg,rgba(225,240,255,0.10),rgba(225,240,255,0) 30%),var(--panel);border-radius:var(--r-xl);
+  border:1px solid var(--line);background:linear-gradient(180deg,rgba(225,240,255,0.08),rgba(225,240,255,0) 30%),var(--solid);border-radius:var(--r-xl);
   padding:24px 26px;display:flex;flex-direction:column;min-width:0;min-height:0;
-  box-shadow:var(--frost-edge,0 0 #0000),var(--shadow-card);backdrop-filter:blur(2px);
+  box-shadow:var(--frost-edge,0 0 #0000),var(--shadow-card);
 }
 .sched-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex:none}
 .sched-title{font-size:27px;font-weight:700}
@@ -255,10 +256,10 @@ body::after{
 .rows{display:flex;flex-direction:column;justify-content:space-between;gap:12px;flex:1;min-height:0}
 .row{
   display:flex;align-items:center;gap:18px;padding:0 24px;flex:1;
-  border:1px solid var(--line);border-radius:var(--r-md);background:rgba(255,255,255,0.018);
+  border:1px solid var(--line);border-radius:var(--r-md);background:rgba(255,255,255,0.035);
   transition:.25s;position:relative;
 }
-.row.self{opacity:0.5}
+.row.self{opacity:0.72}
 .row.now{
   background:var(--acc-soft);border:2px solid var(--acc);transform:scale(1.015);opacity:1;
   animation:nowpulse 1.9s ease-in-out infinite;
