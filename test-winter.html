@@ -27,33 +27,33 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#07101d; --bg2:#0e1c31;
-  --panel:rgba(200,225,255,0.06); --panel-strong:rgba(200,225,255,0.10);
-  --line:rgba(190,220,255,0.11); --line-strong:rgba(190,220,255,0.2);
-  --ink:#f4f8fd; --muted:#9db0c9; --muted2:#5d7291;
+  --bg:#071327; --bg2:#13305a;
+  --panel:rgba(214,232,255,0.075); --panel-strong:rgba(214,232,255,0.12);
+  --line:rgba(205,228,255,0.20); --line-strong:rgba(205,228,255,0.30);
+  --ink:#f6faff; --muted:#a9bdd8; --muted2:#6c84a6;
   --blue:#7ab8ff; --blue-soft:rgba(122,184,255,0.14);
   --teal:#7fd6e6; --teal-soft:rgba(127,214,230,0.13);
   --red:#ff7b84; --red-soft:rgba(255,123,132,0.10);
-  --acc:#f59ac0; --acc2:#e27aa6; --acc-soft:rgba(245,154,192,0.16); --acc-line:rgba(245,154,192,0.48); --glow:rgba(245,154,192,0.09);
-  --frost:rgba(230,243,255,0.22);
+  --acc:#c4b2ff; --acc2:#9a86f2; --acc-soft:rgba(196,178,255,0.17); --acc-line:rgba(196,178,255,0.5); --glow:rgba(170,150,255,0.12);
+  --frost:rgba(236,246,255,0.32);
   --r-sm:12px; --r-md:16px; --r-lg:20px; --r-xl:26px;
   --shadow-card:0 18px 44px -18px rgba(0,0,0,0.55);
   /* 인터넷이 안 될 때도 비슷한 모양이 나오도록 로컬 대체 글꼴 지정 */
   --font-sans:'IBM Plex Sans KR','Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
   --font-mono:'IBM Plex Mono','Roboto Mono','Consolas','DejaVu Sans Mono','Droid Sans Mono',monospace;
 }
-body.grade-2{ --acc:#86c5ff; --acc2:#5a9fe8; --acc-soft:rgba(134,197,255,0.16); --acc-line:rgba(134,197,255,0.48); --glow:rgba(134,197,255,0.10); }
-body.grade-3{ --acc:#f59ac0; --acc2:#e27aa6; --acc-soft:rgba(245,154,192,0.16); --acc-line:rgba(245,154,192,0.48); --glow:rgba(245,154,192,0.09); }
+body.grade-2{ --acc:#8fd3ff; --acc2:#56a8ee; --acc-soft:rgba(143,211,255,0.17); --acc-line:rgba(143,211,255,0.5); --glow:rgba(120,200,255,0.13); }
+body.grade-3{ --acc:#c4b2ff; --acc2:#9a86f2; --acc-soft:rgba(196,178,255,0.17); --acc-line:rgba(196,178,255,0.5); --glow:rgba(170,150,255,0.12); }
 
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%;overflow:hidden}
 body{
   font-family:var(--font-sans);color:var(--ink);
   background:
-    radial-gradient(1300px 560px at 50% -18%, rgba(170,210,255,0.20), transparent 64%),
-    radial-gradient(900px 560px at 8% -8%, var(--glow), transparent 58%),
-    radial-gradient(900px 560px at 100% -6%, var(--glow), transparent 54%),
-    linear-gradient(180deg,var(--bg2) 0%, var(--bg) 70%);
+    radial-gradient(58vw 26vh at 28% 2%, rgba(110,225,215,0.16), transparent 70%),
+    radial-gradient(52vw 24vh at 72% 0%, rgba(140,150,255,0.18), transparent 70%),
+    radial-gradient(1300px 600px at 50% -10%, rgba(175,215,255,0.20), transparent 66%),
+    linear-gradient(180deg,var(--bg2) 0%, #0b1d3b 45%, var(--bg) 100%);
   background-color:var(--bg);
   transition:background .45s ease;position:relative;
 }
@@ -70,16 +70,20 @@ body{
 #stage{z-index:1}
 #stage::before{content:none}
 body::after{
-  content:"";position:fixed;left:0;right:0;bottom:0;height:17vh;pointer-events:none;z-index:0;
+  content:"";position:fixed;left:0;right:0;bottom:0;height:19vh;pointer-events:none;z-index:0;
   background:
-    radial-gradient(28vw 9vh at 6% 100%, rgba(228,240,255,0.22), rgba(228,240,255,0.07) 55%, transparent 72%),
-    radial-gradient(36vw 11vh at 38% 104%, rgba(228,240,255,0.17), rgba(228,240,255,0.06) 55%, transparent 72%),
-    radial-gradient(32vw 10vh at 72% 100%, rgba(228,240,255,0.21), rgba(228,240,255,0.07) 55%, transparent 72%),
-    radial-gradient(24vw 9vh at 100% 98%, rgba(228,240,255,0.14), transparent 72%);
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 200' preserveAspectRatio='none'><path d='M0 150 C120 115 250 120 380 140 C520 162 640 118 800 122 C960 126 1060 160 1220 150 C1360 141 1470 112 1600 125 L1600 200 L0 200Z' fill='%23eaf3ff' fill-opacity='0.26'/></svg>") no-repeat bottom / 100% 100%,
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1600 200' preserveAspectRatio='none'><path d='M0 120 C160 70 300 80 430 105 C560 130 680 60 840 70 C1000 80 1080 125 1230 110 C1380 95 1480 60 1600 80 L1600 200 L0 200Z' fill='%23d7e7fb' fill-opacity='0.16'/></svg>") no-repeat bottom / 100% 120%;
+}
+body::before{
+  content:"";position:fixed;left:0;right:0;bottom:2vh;height:24vh;pointer-events:none;z-index:0;opacity:0.75;
+  background:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 260'><g fill='%231c3a62'><path d='M70 40 L110 120 H92 L128 190 H104 L140 250 H0 L36 190 H12 L48 120 H30Z'/><path d='M190 90 L218 148 H205 L232 200 H214 L240 250 H140 L166 200 H148 L175 148 H162Z'/></g><g fill='%23eef6ff' fill-opacity='0.85'><path d='M70 40 L86 72 Q70 80 54 72Z'/><path d='M48 120 Q70 130 92 120 L98 132 Q70 142 42 132Z'/><path d='M36 190 Q70 200 104 190 L110 202 Q70 212 30 202Z'/><path d='M190 90 L201 113 Q190 119 179 113Z'/><path d='M175 148 Q190 155 205 148 L210 158 Q190 165 170 158Z'/></g></svg>") no-repeat left -1vw bottom / auto 100%,
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 260'><g transform='translate(300 0) scale(-1 1)'><g fill='%231c3a62'><path d='M70 40 L110 120 H92 L128 190 H104 L140 250 H0 L36 190 H12 L48 120 H30Z'/><path d='M190 90 L218 148 H205 L232 200 H214 L240 250 H140 L166 200 H148 L175 148 H162Z'/></g><g fill='%23eef6ff' fill-opacity='0.85'><path d='M70 40 L86 72 Q70 80 54 72Z'/><path d='M48 120 Q70 130 92 120 L98 132 Q70 142 42 132Z'/><path d='M36 190 Q70 200 104 190 L110 202 Q70 212 30 202Z'/><path d='M190 90 L201 113 Q190 119 179 113Z'/><path d='M175 148 Q190 155 205 148 L210 158 Q190 165 170 158Z'/></g></g></svg>") no-repeat right -1vw bottom / auto 100%;
 }
 /* 큰 눈 결정 무늬 (아주 옅게) */
 #stage::after{
-  content:"";position:absolute;inset:0;pointer-events:none;opacity:0.07;z-index:0;
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:0.12;z-index:0;
   background:
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dcecff' stroke-width='0.9' stroke-linecap='round'><path d='M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10'/><path d='M9.5 3.5 12 6l2.5-2.5M9.5 20.5 12 18l2.5 2.5M3.6 10.2l3.4.9-.9-3.4M20.4 13.8l-3.4-.9.9 3.4M6.1 16.3l.9-3.4-3.4.9M17.9 7.7l-.9 3.4 3.4-.9'/></svg>") no-repeat left -70px bottom 40px / 300px 300px,
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23dcecff' stroke-width='0.9' stroke-linecap='round'><path d='M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10'/><path d='M9.5 3.5 12 6l2.5-2.5M9.5 20.5 12 18l2.5 2.5M3.6 10.2l3.4.9-.9-3.4M20.4 13.8l-3.4-.9.9 3.4M6.1 16.3l.9-3.4-3.4.9M17.9 7.7l-.9 3.4 3.4-.9'/></svg>") no-repeat right 520px top 230px / 120px 120px,
@@ -112,7 +116,7 @@ body::after{
 .schedule,.notice{position:relative}
 .schedule::after,.notice::after{
   content:"";position:absolute;left:16px;right:16px;top:-11px;height:19px;pointer-events:none;
-  border-radius:10px 10px 5px 5px;opacity:0.78;
+  border-radius:10px 10px 5px 5px;opacity:0.92;
   background:
     radial-gradient(ellipse 90px 16px at 10% 100%, #eef5ff 66%, transparent 70%),
     radial-gradient(ellipse 150px 19px at 36% 100%, #eef5ff 66%, transparent 70%),
@@ -121,7 +125,7 @@ body::after{
     linear-gradient(#eef5ff,#eef5ff) left bottom / 100% 7px no-repeat;
   box-shadow:0 3px 8px -4px rgba(0,0,0,0.35);
 }
-.notice::after{left:30px;right:30px;opacity:0.62}
+.notice::after{left:30px;right:30px;opacity:0.8}
 
 .grade-strip{
   position:absolute;top:0;left:0;right:0;height:6px;
@@ -196,7 +200,7 @@ body::after{
 
 .status,.schedule,.notice{--frost-edge:inset 0 1px 0 var(--frost)}
 .status{
-  border:1px solid var(--line);background:var(--panel);border-radius:var(--r-xl);
+  border:1px solid var(--line);background:linear-gradient(180deg,rgba(225,240,255,0.10),rgba(225,240,255,0) 45%),var(--panel);border-radius:var(--r-xl);
   padding:22px 30px;position:relative;overflow:hidden;transition:.3s;width:100%;text-align:left;
   box-shadow:var(--frost-edge,0 0 #0000),var(--shadow-card);backdrop-filter:blur(2px);
 }
@@ -227,7 +231,7 @@ body::after{
 
 /* 오른쪽: 일정 */
 .schedule{
-  border:1px solid var(--line);background:var(--panel);border-radius:var(--r-xl);
+  border:1px solid var(--line);background:linear-gradient(180deg,rgba(225,240,255,0.10),rgba(225,240,255,0) 30%),var(--panel);border-radius:var(--r-xl);
   padding:24px 26px;display:flex;flex-direction:column;min-width:0;min-height:0;
   box-shadow:var(--frost-edge,0 0 #0000),var(--shadow-card);backdrop-filter:blur(2px);
 }
@@ -755,9 +759,9 @@ document.getElementById('gradePicker').addEventListener('click', e=>{
   if(!box || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return;
   const rnd=(a,b)=>a+Math.random()*(b-a);
   const LAYERS=[
-    {n:46, size:[1.5,2.8], op:[0.18,0.38], dur:[22,34], drift:30, blur:0},
-    {n:28, size:[3,4.6],   op:[0.32,0.55], dur:[14,22], drift:60, blur:0},
-    {n:10, size:[5,7.5],   op:[0.30,0.50], dur:[9,14],  drift:90, blur:1.2},
+    {n:80, size:[1.6,3],   op:[0.30,0.55], dur:[20,32], drift:30, blur:0},
+    {n:45, size:[3.2,5.2], op:[0.50,0.80], dur:[12,20], drift:60, blur:0},
+    {n:16, size:[6,10],    op:[0.45,0.70], dur:[8,13],  drift:90, blur:1.6},
   ];
   LAYERS.forEach(L=>{
     for(let i=0;i<L.n;i++){
@@ -769,11 +773,11 @@ document.getElementById('gradePicker').addEventListener('click', e=>{
       box.appendChild(f);
     }
   });
-  for(let i=0;i<9;i++){
+  for(let i=0;i<20;i++){
     const f=document.createElement('b');
     const d=rnd(18,30).toFixed(1);
     f.textContent='❄';
-    f.style.cssText=`left:${rnd(0,100).toFixed(2)}%;font-size:${rnd(14,26).toFixed(0)}px;opacity:${rnd(0.28,0.5).toFixed(2)};`+
+    f.style.cssText=`left:${rnd(0,100).toFixed(2)}%;font-size:${rnd(16,36).toFixed(0)}px;opacity:${rnd(0.38,0.65).toFixed(2)};`+
       `animation-duration:${d}s;animation-delay:-${rnd(0,d).toFixed(1)}s;--drift:${rnd(-70,70).toFixed(0)}px;`;
     box.appendChild(f);
   }
